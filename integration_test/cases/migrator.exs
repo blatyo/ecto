@@ -110,6 +110,28 @@ defmodule Ecto.Integration.MigratorTest do
     end
   end
 
+  test "concurrent migrators" do
+    in_tmp fn path ->
+      versions = 55..60
+      migrations = Enum.map(versions, &create_migration/1)
+
+      run_migrator = fn ->
+        run(PoolRepo, path, :up, all: true, log: false)
+      end
+
+      migrator_results =
+        1..4
+        |> Enum.map(fn _ ->
+          Task.async(run_migrator)
+        end)
+        |> Enum.map(&Task.await/1)
+        |> Enum.sort_by(&length/1)
+
+      assert migrator_results == [[], [], [], Enum.to_list(versions)]
+    end
+
+  end
+
   defp count_entries() do
     PoolRepo.aggregate(SchemaMigration, :count, :version)
   end
