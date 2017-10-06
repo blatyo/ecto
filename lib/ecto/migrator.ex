@@ -190,6 +190,7 @@ defmodule Ecto.Migrator do
     end
 
     lock_for_migrations repo, opts, fn versions ->
+      IO.inspect ["In the lock", Process.get(:num)]
       cond do
         opts[:all] ->
           run_all(repo, versions, migration_source, direction, opts)
@@ -229,6 +230,7 @@ defmodule Ecto.Migrator do
       {:error, error} ->
         raise error
       result ->
+        IO.inspect ["Done", Process.get(:num)]
         result
     end
   end
